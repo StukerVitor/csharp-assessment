@@ -6,6 +6,7 @@ using OxyPlot.Series;
 using OxyPlot.WindowsForms;
 using DataColumn = System.Data.DataColumn;
 using OxyPlot.Axes;
+using System.Text;
 
 namespace ArcVera_Tech_Test
 {
@@ -106,7 +107,41 @@ namespace ArcVera_Tech_Test
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    string filePath = saveFileDialog.FileName;
+                    DataTable dataTable = (DataTable)dgImportedEra5.DataSource;
 
+                    if (dataTable != null)
+                    {
+                        try
+                        {
+                            StringBuilder csvContent = new StringBuilder();
+
+                            // Add the column headers
+                            IEnumerable<string> columnNames = dataTable.Columns.Cast<DataColumn>()
+                                                     .Select(column => column.ColumnName);
+                            csvContent.AppendLine(string.Join(",", columnNames));
+
+                            // Add the rows
+                            foreach (DataRow row in dataTable.Rows)
+                            {
+                                //Double single quotes to avoid confusion during csv export
+                                IEnumerable<string> fields = row.ItemArray.Select(field => field.ToString().Replace("\"", "\"\""));
+                                csvContent.AppendLine(string.Join(",", fields));
+                            }
+
+                            // Write to file
+                            File.WriteAllText(filePath, csvContent.ToString());
+                            MessageBox.Show("CSV file has been saved successfully.", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"An error occurred while saving the CSV file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("No data to export.", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
             }
         }
