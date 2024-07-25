@@ -99,7 +99,16 @@ namespace ArcVera_Tech_Test
 
         private void btnExportCsv_Click(object sender, EventArgs e)
         {
-            // Complete here
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                saveFileDialog.Title = "Save CSV File";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+
+                }
+            }
         }
 
         private void btnExportExcel_Click(object sender, EventArgs e)
