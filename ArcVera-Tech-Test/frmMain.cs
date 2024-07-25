@@ -7,6 +7,9 @@ using OxyPlot.WindowsForms;
 using DataColumn = System.Data.DataColumn;
 using OxyPlot.Axes;
 using System.Text;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DataField = Parquet.Schema.DataField;
 
 namespace ArcVera_Tech_Test
 {
@@ -116,7 +119,7 @@ namespace ArcVera_Tech_Test
                         {
                             StringBuilder csvContent = new StringBuilder();
 
-                            // Add the column headers
+                            // Add the column headers (Columns.Cast<DataColumn>() to convert Columns(DataColumnCollection) to IEnumerable<DataColumn> for LINQ operations)
                             IEnumerable<string> columnNames = dataTable.Columns.Cast<DataColumn>()
                                                      .Select(column => column.ColumnName);
                             csvContent.AppendLine(string.Join(",", columnNames));
@@ -124,7 +127,7 @@ namespace ArcVera_Tech_Test
                             // Add the rows
                             foreach (DataRow row in dataTable.Rows)
                             {
-                                //Double single quotes to avoid confusion during csv export
+                                // Double single quotes to avoid confusion during csv export
                                 IEnumerable<string> fields = row.ItemArray.Select(field => field.ToString().Replace("\"", "\"\""));
                                 csvContent.AppendLine(string.Join(",", fields));
                             }
@@ -148,7 +151,85 @@ namespace ArcVera_Tech_Test
 
         private void btnExportExcel_Click(object sender, EventArgs e)
         {
-            // Complete here
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*";
+                saveFileDialog.Title = "Save Excel File";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = saveFileDialog.FileName;
+                    DataTable dataTable = (DataTable)dgImportedEra5.DataSource;
+
+                    if (dataTable != null)
+                    {
+                        try
+                        {
+                            using (var workbook = new XLWorkbook())
+                            {
+                                const int maxRowsPerSheet = 1048575; // Maximum rows per sheet
+                                int totalRows = dataTable.Rows.Count;
+                                int sheetIndex = 1;
+                                int currentRow = 0;
+                                int u10ColumnIndex = 0;
+                                bool alreadyHasu10ColumnIndex = false;
+
+                                // Loop to handle multiple sheets
+                                while (currentRow < totalRows)
+                                {
+                                    // Add a new worksheet
+                                    var worksheet = workbook.Worksheets.Add($"Sheet{sheetIndex}");
+
+                                    // Add the column headers
+                                    for (int col = 0; col < dataTable.Columns.Count; col++)
+                                    {
+                                        worksheet.Cell(1, col + 1).Value = dataTable.Columns[col].ColumnName;
+                                        if (!alreadyHasu10ColumnIndex && dataTable.Columns[col].ColumnName == "u10")
+                                        {
+                                            u10ColumnIndex = col;
+                                            alreadyHasu10ColumnIndex = true;
+                                        }
+                                    }
+
+                                    // Add the data rows for the current sheet
+                                    int rowsInCurrentSheet = 0;
+                                    while (rowsInCurrentSheet < maxRowsPerSheet && currentRow < totalRows)
+                                    {
+                                        for (int col = 0; col < dataTable.Columns.Count; col++)
+                                        {
+                                            // Get the cell value and convert it to string
+                                            var cellValue = dataTable.Rows[currentRow][col];
+                                            worksheet.Cell(rowsInCurrentSheet + 2, col + 1).Value = cellValue != DBNull.Value ? cellValue.ToString() : string.Empty;
+
+                                            if(cellValue != DBNull.Value && col == u10ColumnIndex && Convert.ToDecimal(dataTable.Rows[currentRow][col]) < 0) 
+                                            {
+                                                worksheet.Range(rowsInCurrentSheet + 2, 1, rowsInCurrentSheet + 2, dataTable.Columns.Count).Style.Fill.BackgroundColor = XLColor.Red;
+                                            }
+                                        }
+
+                                        rowsInCurrentSheet++;
+                                        currentRow++;
+                                    }
+
+                                    sheetIndex++;
+                                }
+
+                                // Save the workbook
+                                workbook.SaveAs(filePath);
+                                MessageBox.Show("Excel file has been saved successfully.", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"An error occurred while saving the Excel file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("No data to export.", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
         }
     }
 }
