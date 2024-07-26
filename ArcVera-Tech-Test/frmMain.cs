@@ -201,7 +201,7 @@ namespace ArcVera_Tech_Test
                                             var cellValue = dataTable.Rows[currentRow][col];
                                             worksheet.Cell(rowsInCurrentSheet + 2, col + 1).Value = cellValue != DBNull.Value ? cellValue.ToString() : string.Empty;
 
-                                            if(cellValue != DBNull.Value && col == u10ColumnIndex && Convert.ToDecimal(dataTable.Rows[currentRow][col]) < 0) 
+                                            if (cellValue != DBNull.Value && col == u10ColumnIndex && Convert.ToDecimal(dataTable.Rows[currentRow][col]) < 0)
                                             {
                                                 worksheet.Range(rowsInCurrentSheet + 2, 1, rowsInCurrentSheet + 2, dataTable.Columns.Count).Style.Fill.BackgroundColor = XLColor.Red;
                                             }
@@ -229,6 +229,76 @@ namespace ArcVera_Tech_Test
                         MessageBox.Show("No data to export.", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
+            }
+        }
+
+        private void btnFilterDaily_Click(object sender, EventArgs e)
+        {
+            DataTable dataTable = (DataTable)dgImportedEra5.DataSource;
+            if (dataTable != null)
+            {
+                if (!dataTable.Columns.Contains("date"))
+                {
+                    MessageBox.Show("'date' column does not exist.");
+                    return;
+                }
+
+                var sortedRows = dataTable.AsEnumerable().OrderBy(row => row.Field<DateTime>("date")).CopyToDataTable();
+
+                dgImportedEra5.DataSource = sortedRows;
+            }
+            else
+            {
+                MessageBox.Show("Filtered error.", "Filtered error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void btnFilterWeekly_Click(object sender, EventArgs e)
+        {
+            DataTable dataTable = (DataTable)dgImportedEra5.DataSource;
+            if (dataTable != null)
+            {
+                if (!dataTable.Columns.Contains("date"))
+                {
+                    MessageBox.Show("'date' column does not exist.");
+                    return;
+                }
+
+                var sortedRows = dataTable.AsEnumerable().OrderBy(row => row.Field<DateTime>("date")).CopyToDataTable();
+
+                if (sortedRows != null)
+                {
+                    DataTable newTable = sortedRows.Clone(); // creating new table to not manipulate sortedRows itself
+                    newTable.Columns.Add("week", typeof(int));
+
+                    DateTime startDate = new DateTime(2023, 1, 1); // using this date as the basis for week counting
+
+                    foreach (DataRow row in sortedRows.Rows)
+                    {
+                        DataRow newRow = newTable.NewRow(); // creates a new DataRow with the same schema as the table
+                        newRow.ItemArray = row.ItemArray; // copies all values of a row to the newRow
+
+                        DateTime currentDate = (DateTime)row["date"];
+
+                        // (01/02/2023) - (01/01/2023) --> (1 / 7) + 1 = 0 + 1 = 1
+                        // (01/08/2023) - (01/01/2023) --> (7 / 7) + 1 = 1 + 1 = 2
+                        // (01/21/2023) - (01/01/2023) --> (20 / 7) + 1 = 2 + 1 = 3
+                        // (01/22/2023) - (01/01/2023) --> (21 / 7) + 1 = 3 + 1 = 4
+                        // ...
+                        int daysDifference = (currentDate - startDate).Days;
+                        int week = (daysDifference / 7) + 1;
+
+                        newRow["week"] = week;
+
+                        newTable.Rows.Add(newRow);
+                    }
+
+                    dgImportedEra5.DataSource = newTable;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Filtered error.", "Filtered error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }

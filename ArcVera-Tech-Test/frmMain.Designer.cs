@@ -32,6 +32,8 @@
             btnImportEra5 = new Button();
             btnExportCsv = new Button();
             btnExportExcel = new Button();
+            btnFilterDaily = new Button();
+            btnFilterWeekly = new Button();
             dgImportedEra5 = new DataGridView();
             plotView1 = new OxyPlot.WindowsForms.PlotView();
             ((System.ComponentModel.ISupportInitialize)dgImportedEra5).BeginInit();
@@ -67,13 +69,33 @@
             btnExportExcel.UseVisualStyleBackColor = true;
             btnExportExcel.Click += btnExportExcel_Click;
             // 
+            // btnFilterDaily
+            // 
+            btnFilterDaily.Location = new Point(275, 12);
+            btnFilterDaily.Name = "btnFilterDaily";
+            btnFilterDaily.Size = new Size(125, 23);
+            btnFilterDaily.TabIndex = 3;
+            btnFilterDaily.Text = "Filter Daily";
+            btnFilterDaily.UseVisualStyleBackColor = true;
+            btnFilterDaily.Click += btnFilterDaily_Click;
+            // 
+            // btnFilterWeekly
+            // 
+            btnFilterWeekly.Location = new Point(400, 12);
+            btnFilterWeekly.Name = "btnFilterWeekly";
+            btnFilterWeekly.Size = new Size(125, 23);
+            btnFilterWeekly.TabIndex = 4;
+            btnFilterWeekly.Text = "Filter Weekly";
+            btnFilterWeekly.UseVisualStyleBackColor = true;
+            btnFilterWeekly.Click += btnFilterWeekly_Click;
+            // 
             // dgImportedEra5
             // 
             dgImportedEra5.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgImportedEra5.Location = new Point(12, 79);
             dgImportedEra5.Name = "dgImportedEra5";
             dgImportedEra5.Size = new Size(576, 464);
-            dgImportedEra5.TabIndex = 3;
+            dgImportedEra5.TabIndex = 5;
             // 
             // plotView1
             // 
@@ -81,7 +103,7 @@
             plotView1.Name = "plotView1";
             plotView1.PanCursor = Cursors.Hand;
             plotView1.Size = new Size(558, 464);
-            plotView1.TabIndex = 4;
+            plotView1.TabIndex = 6;
             plotView1.Text = "pltAvgWd";
             plotView1.ZoomHorizontalCursor = Cursors.SizeWE;
             plotView1.ZoomRectangleCursor = Cursors.SizeNWSE;
@@ -97,6 +119,8 @@
             Controls.Add(btnExportExcel);
             Controls.Add(btnExportCsv);
             Controls.Add(btnImportEra5);
+            Controls.Add(btnFilterDaily);
+            Controls.Add(btnFilterWeekly);
             Name = "frmMain";
             Text = "WindSpeed Reader";
             ((System.ComponentModel.ISupportInitialize)dgImportedEra5).EndInit();
@@ -107,6 +131,8 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private Button btnImportEra5;
         private Button btnExportCsv;
+        private Button btnFilterDaily;
+        private Button btnFilterWeekly;
         private Button btnExportExcel;
         private DataGridView dgImportedEra5;
         private OxyPlot.WindowsForms.PlotView plotView1;
